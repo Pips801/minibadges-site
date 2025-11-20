@@ -7,18 +7,20 @@ import os
 from datetime import datetime
 from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
+from urllib.parse import urlparse, parse_qs
 
-# Default paths / settings (can be overridden by env or CLI)
-DEFAULT_INPUT_CSV_PATH = os.environ.get("MINIBADGE_CSV", "./google-form-responses.csv")
-DEFAULT_OUTPUT_JSON    = os.environ.get("MINIBADGE_JSON", "./minibadges_from_form.json")
+# --------- Config --------------------------------------------------------
 
-# Map JSON fields -> CSV column headers from the Google Form.
-# *** CHANGE THE RIGHT-HAND SIDE STRINGS TO MATCH YOUR ACTUAL CSV HEADERS ***
-CSV_MAP = {
+DEFAULT_INPUT_CSV_PATH = os.environ.get("MINIBADGE_CSV", "data/google-form-responses.csv")
+DEFAULT_OUTPUT_JSON    = os.environ.get("MINIBADGE_JSON", "data/minibadges_from_form.json")
+IMAGES_DIR             = os.environ.get("MINIBADGE_IMAGES_DIR", "images")
+
+# Your current Form → JSON mapping
+CSV_MAP = { 
     "title":                 "Title of your badge",
     "author":                "Your handle/name",
     "category":              "Type of badge",
-    # conferenceYear is now derived from timestamp year; no CSV column needed
+    # conferenceYear is derived from timestamp year
     "solderingDifficulty":   "Soldering difficulty",
     "rarity":                "Rarity",
     "quantityMade":          "How many did you make?",
@@ -33,6 +35,8 @@ CSV_MAP = {
     "timestamp":             "Timestamp",  # default Google Form timestamp
 }
 
+# --------- Helpers -------------------------------------------------------
+
 
 def _get(row, col_name, default=""):
     if not col_name:
@@ -46,6 +50,19 @@ def _parse_int(val, default=0):
         return int(val)
     except (ValueError, TypeError):
         return default
+
+
+def slugify(title: str) -> str:
+    """
+    Convert a badge title into a filesystem-safe slug.
+    "Scratch and Sniff!" -> "scratch-and-sniff"
+    """
+    import re
+    t = (title or "").strip().lower()
+    t = re.sub(r"['’]", "", t)          # remove apostrophes
+    t = re.sub(r"[^a-z0-9]+", "-", t)   # non-alphanum -> dash
+    t = re.sub(r"-+", "-", t).strip("-")
+    return t or "badge"
 
 
 def load_csv_reader(csv_url=None, csv_path=None):
@@ -63,7 +80,6 @@ def load_csv_reader(csv_url=None, csv_path=None):
 
         return csv.DictReader(io.StringIO(text))
 
-    # Fallback: local file
     csv_path = csv_path or DEFAULT_INPUT_CSV_PATH
     if not os.path.exists(csv_path):
         raise SystemExit(f"CSV file not found: {csv_path}")
@@ -85,11 +101,11 @@ def derive_year_from_timestamp(ts_raw: str) -> str:
         return ""
 
     formats = [
-      "%m/%d/%Y %H:%M:%S",
-      "%m/%d/%Y %H:%M",       # sometimes seconds are omitted
-      "%Y-%m-%d %H:%M:%S",    # ISO-ish
-      "%Y-%m-%d %H:%M",       # ISO-ish without seconds
-      "%m/%d/%Y"              # date only
+        "%m/%d/%Y %H:%M:%S",
+        "%m/%d/%Y %H:%M",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%m/%d/%Y",
     ]
 
     for fmt in formats:
@@ -99,12 +115,105 @@ def derive_year_from_timestamp(ts_raw: str) -> str:
         except ValueError:
             continue
 
-    # Couldn’t parse; return empty and keep the raw timestamp as-is
     return ""
 
 
+def google_drive_to_direct(url: str) -> str:
+    """
+    Convert various Google Drive share URLs into a direct download URL.
+    e.g.
+      https://drive.google.com/open?id=FILEID
+      https://drive.google.com/file/d/FILEID/view?usp=sharing
+    -> https://drive.google.com/uc?export=download&id=FILEID
+    """
+    if not url or "drive.google.com" not in url:
+        return url
+
+    parsed = urlparse(url)
+
+    # Case 1: /open?id=FILEID
+    qs = parse_qs(parsed.query)
+    if "id" in qs and qs["id"]:
+        file_id = qs["id"][0]
+        return f"https://drive.google.com/uc?export=download&id={file_id}"
+
+    # Case 2: /file/d/FILEID/…
+    parts = parsed.path.split("/")
+    if "file" in parts and "d" in parts:
+        try:
+            d_idx = parts.index("d")
+            file_id = parts[d_idx + 1]
+            if file_id:
+                return f"https://drive.google.com/uc?export=download&id={file_id}"
+        except (ValueError, IndexError):
+            pass
+
+    # Fallback: return original
+    return url
+
+
+def infer_extension_from_content_type(content_type: str, default="jpg") -> str:
+    """
+    Map content-type to an extension.
+    """
+    if not content_type:
+        return default
+    ct = content_type.lower()
+    if "jpeg" in ct or "jpg" in ct:
+        return "jpg"
+    if "png" in ct:
+        return "png"
+    if "gif" in ct:
+        return "gif"
+    if "webp" in ct:
+        return "webp"
+    if "bmp" in ct:
+        return "bmp"
+    return default
+
+
+def download_image_to_repo(image_url: str, base_name: str) -> str:
+    """
+    Download an image at image_url into IMAGES_DIR with filename base_name + proper extension.
+    Returns a relative path (e.g. 'images/foo-front.jpg') on success,
+    or '' on failure.
+    """
+    if not image_url:
+        return ""
+
+    # If it's already a non-http path (e.g. we've already processed it), just return it.
+    if not image_url.startswith("http://") and not image_url.startswith("https://"):
+        return image_url
+
+    url = google_drive_to_direct(image_url)
+
+    try:
+        resp = urlopen(url)
+        content_type = resp.headers.get("Content-Type", "")
+        data = resp.read()
+    except (HTTPError, URLError) as e:
+        print(f"[WARN] Failed to download image {image_url}: {e}")
+        return ""
+
+    ext = infer_extension_from_content_type(content_type, default="jpg")
+    os.makedirs(IMAGES_DIR, exist_ok=True)
+
+    filename = f"{base_name}.{ext}"
+    file_path = os.path.join(IMAGES_DIR, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(data)
+
+    rel_path = f"{IMAGES_DIR}/{filename}".replace("\\", "/")
+    print(f"[INFO] Saved image {image_url} -> {rel_path}")
+    return rel_path
+
+
+# --------- Main ---------------------------------------------------------
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Convert Google Form CSV to minibadges JSON")
+    parser = argparse.ArgumentParser(description="Convert Google Form CSV to minibadges JSON (with images)")
     parser.add_argument(
         "--csv-url",
         help="URL of the CSV export (e.g. Google Form/Sheet 'export?format=csv'). "
@@ -140,6 +249,8 @@ def main():
         if not title:
             continue
 
+        slug = slugify(title)
+
         # Quantity
         qty_str = _get(row, CSV_MAP["quantityMade"])
         qty = _parse_int(qty_str, default=0)
@@ -149,12 +260,25 @@ def main():
         timestamp = timestamp_raw
         conference_year = derive_year_from_timestamp(timestamp_raw)
 
+        # Raw URLs from the form
+        raw_profile_url = _get(row, CSV_MAP["profilePictureUrl"])
+        raw_front_url   = _get(row, CSV_MAP["frontImageUrl"])
+        raw_back_url    = _get(row, CSV_MAP["backImageUrl"])
+
+        # Download images and rewrite URLs
+        # Profile picture: optional; if you want local copies, uncomment this:
+        # profile_url = download_image_to_repo(raw_profile_url, f"{slug}-profile") or raw_profile_url
+        profile_url = raw_profile_url  # leave remote for now, or change to local as above
+
+        front_url = download_image_to_repo(raw_front_url, f"{slug}-front") or raw_front_url
+        back_url  = download_image_to_repo(raw_back_url,  f"{slug}-back")  or raw_back_url
+
         badge = {
             "title":               title,
             "author":              _get(row, CSV_MAP["author"]),
-            "profilePictureUrl":   _get(row, CSV_MAP["profilePictureUrl"]),
-            "frontImageUrl":       _get(row, CSV_MAP["frontImageUrl"]),
-            "backImageUrl":        _get(row, CSV_MAP["backImageUrl"]),
+            "profilePictureUrl":   profile_url,
+            "frontImageUrl":       front_url,
+            "backImageUrl":        back_url,
             "description":         _get(row, CSV_MAP["description"]),
             "specialInstructions": _get(row, CSV_MAP["specialInstructions"]),
             "solderingInstructions": _get(row, CSV_MAP["solderingInstructions"]),
