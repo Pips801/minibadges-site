@@ -58,7 +58,7 @@ jobs:
           # Run your script. Adjust paths/args to match your repo.
           export MINIBADGE_CSV_URL="$CSV_URL"
 
-          python scripts/formparse.py
+          python formparse.py
 
       - name: Commit and push changes (if any)
         run: |
