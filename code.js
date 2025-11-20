@@ -112,13 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = (difficulty || '').trim().toLowerCase();
 
     if (d === 'pre-soldered') {
-      tagEl.classList.add('is-success');
+      tagEl.classList.add('is-info');
     } else if (d === 'beginner') {
-      tagEl.classList.add('is-success', 'is-light');
+      tagEl.classList.add('is-success');
     } else if (d === 'intermediate') {
-      tagEl.classList.add('is-warning');
+      tagEl.classList.add('is-success');
     } else if (d === 'advanced') {
-      tagEl.classList.add('is-danger', 'is-light');
+      tagEl.classList.add('is-warning');
     } else if (d === 'torture') {
       tagEl.classList.add('is-danger');
     }
