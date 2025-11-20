@@ -830,7 +830,7 @@
   {
     "title": "Glitch Gallery Camera",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/glitch-gallery-camera-front.png",
     "backImageUrl": "images/glitch-gallery-camera-back.png",
     "description": "This Minibadge is to be given out to the first 200 attendees of 801 Lab's first ever Glitch Gallery\n- an after-hours cyber art gallery held on Thursday night with projections, music, lights,\ntech-related art, and drinks + snacks.",
@@ -3710,7 +3710,7 @@
   {
     "title": "Scratch and Sniff",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/scratch-and-sniff-front.png",
     "backImageUrl": "images/scratch-and-sniff-back.png",
     "description": "A scratch and sniff minibadgebadge. Stupid idea that came about from 801 Labs. The badge\nhas a very small scratch and sniff sticker overlayed on the front. The sticker will be one of the 5\nscents I used for this project, as follows\n- DNS (Wet Dirt)\n- TOR (Onion)\n- Zodiak's Sandals (Cheese)\n-MagicSmoke(BurntRubber)",
@@ -3728,7 +3728,7 @@
   {
     "title": "Pipscat",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/pipscat-front.png",
     "backImageUrl": "images/pipscat-back.png",
     "description": "First attempt at full color silk-screening!",
@@ -3746,7 +3746,7 @@
   {
     "title": "Bible Study at ABGs",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/bible-study-at-abgs-front.png",
     "backImageUrl": "images/bible-study-at-abgs-back.png",
     "description": "Sacrilegious Minibadge. You can only get this minibadge if you go to the one bar in Provo\nduring SAINTCON. If I see you're from the con, I'll give you one.",
@@ -3764,7 +3764,7 @@
   {
     "title": "Hang in there!",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/hang-in-there-front.png",
     "backImageUrl": "images/hang-in-there-back.png",
     "description": "Hang in there! You've got this!",
@@ -3782,7 +3782,7 @@
   {
     "title": "I almost DIED at the CheckPoint party",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/i-almost-died-at-the-checkpoint-party-front.png",
     "backImageUrl": "images/i-almost-died-at-the-checkpoint-party-back.png",
     "description": "Some brave soul partied so hard at the 2024 checkpoint party that they died. poor guy. This\nminibadge is in his honor. RIP.",
@@ -3800,7 +3800,7 @@
   {
     "title": "Doug Dimmadome's Dimma-Minibadge",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/doug-dimmadomes-dimma-minibadge-front.png",
     "backImageUrl": "images/doug-dimmadomes-dimma-minibadge-back.png",
     "description": "Doug Dimmadome, owner of the Dimmsdale Dimmadome, has his own Dimma-minibadge!",
@@ -3818,7 +3818,7 @@
   {
     "title": "BEEP BEEP",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/beep-beep-front.png",
     "backImageUrl": "images/beep-beep-back.png",
     "description": "An obnoxiously-loud buzzer with an obnoxiously bright and large button. How tempting! Who\nwouldn't want to press that? Due to the length of the buzzer, the minibadge needs extra-long\npin headers to connect snug with the socket.",
@@ -3836,7 +3836,7 @@
   {
     "title": "ATtiny 816/1616 Devboard",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/attiny-816-1616-devboard-front.png",
     "backImageUrl": "images/attiny-816-1616-devboard-back.png",
     "description": "ATTiny-816/1616 Minibadge Devboard with breakouts for USART, I2C, DAC, and SPI, as well as\ntwo LEDs. There is also support for two ADC (analog to digital conversion) inputs and two PTC\n(touch sense) pins. It is programmed using UPDI via pin 6 (PROG4). either has 8KB or 16KB of\nflash. DO NOT PLUG BOARD IN UPSIDE-DOWN!!!!",
@@ -3854,7 +3854,7 @@
   {
     "title": "Microbadge V2 Minibadge",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/microbadge-v2-minibadge-front.png",
     "backImageUrl": "images/microbadge-v2-minibadge-back.png",
     "description": "Yo dawg, we heard you like minibadges. This minibadge provides the slots for 6x Microbadges,\nso you can minibadge on your minibadge.",
@@ -4826,7 +4826,7 @@
   {
     "title": "ASSEMBLY INSTRUCTIONS:",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/assembly-instructions-front.png",
     "backImageUrl": "images/assembly-instructions-back.png",
     "description": "This badge allows you to use your Flipper Zero to display a Minibadge! It also allows you to\nconnect to I2C and talk to Minibadges that use I2C!",
@@ -4844,7 +4844,7 @@
   {
     "title": "ASSEMBLY INSTRUCTIONS:",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/assembly-instructions-front.png",
     "backImageUrl": "images/assembly-instructions-back.png",
     "description": "A compact 2x2 Minibadge display with the same clock module as the 10x10 minibadge grid. If\nthis device works well, it can be scaled up to 10 minibadges (probaby 9, 3x3 grid) without\nchanging out any components or altering the diagram. The USB-C port is Charge only and is\nconfigured with a 5.1k pulldown resistor to request 5V, however you are limited to approx\n500mA from the DC-DC converter.",
@@ -4862,7 +4862,7 @@
   {
     "title": "ASSEMBLY INSTRUCTIONS:",
     "author": "Pips",
-    "profilePictureUrl": "",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
     "frontImageUrl": "images/assembly-instructions-front.png",
     "backImageUrl": "images/assembly-instructions-back.png",
     "description": "A 3x3 Minibadge display with the same clock module as the 10x10 minibadge grid. The USB-C\nport is Charge only and is configured with a 5.1k pulldown resistor to request 5V, however you\nare limited to approx 500mA@3.3v from the DC-DC converter.",
