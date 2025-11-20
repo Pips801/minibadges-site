@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'item-boardHouse',
     'item-howToAcquire',
     'item-timestamp',
-    'item-quantityMade'
+    'item-quantityMade',
+    'item-rarity'
   ];
 
   // Facet metadata so we can treat them generically
@@ -35,75 +36,38 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: 'author',     field: 'item-author',            select: authorFilter,     label: 'All authors'     }
   ];
 
-  // Free-text search string
+  // Multi-file loader
+  const DATA_FILES = [
+    '2025.json'
+    // add more here if needed, e.g. '2024.json'
+  ];
+
+  let itemList = null;
+  let allData  = [];
   let currentSearchQuery = '';
 
-  // ----- Helpers ----------------------------------------------------------
-
-  function getCurrentFacetValues() {
-    return {
-      category:   (categoryFilter.value   || '').trim(),
-      year:       (yearFilter.value       || '').trim(),
-      difficulty: (difficultyFilter.value || '').trim(),
-      author:     (authorFilter.value     || '').trim()
-    };
-  }
-
-  function itemMatchesSearch(values) {
-    const q = (currentSearchQuery || '').trim().toLowerCase();
-    if (!q) return true;
-
-    const haystack = [
-      'item-title',
-      'item-author',
-      'item-category',
-      'item-conferenceYear',
-      'item-solderingDifficulty',
-      'item-description',
-      'item-boardHouse',
-      'item-howToAcquire'
-    ]
-      .map(k => (values[k] || '').toString().toLowerCase())
-      .join(' ');
-
-    return haystack.includes(q);
-  }
-
-  function rebuildSelect(selectEl, defaultLabel, valuesSet) {
-    const previousValue = selectEl.value;
-    selectEl.innerHTML = '';
-
-    const defaultOpt = document.createElement('option');
-    defaultOpt.value = '';
-    defaultOpt.textContent = defaultLabel;
-    selectEl.appendChild(defaultOpt);
-
-    Array.from(valuesSet)
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-      .forEach(val => {
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.textContent = val;
-        selectEl.appendChild(opt);
-      });
-
-    if (previousValue && valuesSet.has(previousValue)) {
-      selectEl.value = previousValue;
-    } else {
-      selectEl.value = '';
-    }
+  function fetchAllData(files) {
+    return Promise.all(
+      files.map(path =>
+        fetch(path)
+          .then(r => {
+            if (!r.ok) {
+              throw new Error(`Failed to load ${path}`);
+            }
+            return r.json();
+          })
+          .catch(err => {
+            console.error(err);
+            return []; // treat that file as empty
+          })
+      )
+    ).then(datasets => datasets.flat());
   }
 
   function applyDifficultyColor(tagEl, difficulty) {
     if (!tagEl) return;
 
     tagEl.classList.remove(
-      'is-success',
-      'is-success-light',
-      'is-warning',
-      'is-danger',
-      'is-danger-light',
-      'is-info',
       'is-primary',
       'is-link',
       'is-light'
@@ -119,12 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
       tagEl.classList.add('is-success');
     } else if (d === 'advanced') {
       tagEl.classList.add('is-warning');
-    } else if (d === 'torture') {
+    } else if (d === 'stupid') {
       tagEl.classList.add('is-danger');
+    } else {
+      tagEl.classList.add('is-light');
     }
   }
 
-  // ----- Render cards from JSON into DOM (using <template>) --------------
+  // ---------- Render cards into DOM from JSON -----------------------------
 
   function renderCards(data) {
     if (!cardTemplate) {
@@ -148,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const solderingEl  = frag.querySelector('.item-solderingInstructions');
       const howEl        = frag.querySelector('.item-howToAcquire');
       const timestampEl  = frag.querySelector('.item-timestamp');
+      const rarityEl     = frag.querySelector('.item-rarity');
 
       const profileImgEl = frag.querySelector('.item-profilePictureUrl');
       const frontImgEl   = frag.querySelector('.item-frontImageUrl');
@@ -171,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (solderingEl)  solderingEl.textContent  = item.solderingInstructions || '';
       if (howEl)        howEl.textContent        = item.howToAcquire || '';
       if (timestampEl)  timestampEl.textContent  = item.timestamp || '';
+      if (rarityEl)     rarityEl.textContent     = item.rarity || '';
 
       if (profileImgEl) {
         profileImgEl.src = profileUrl;
@@ -187,193 +155,255 @@ document.addEventListener('DOMContentLoaded', () => {
 
       applyDifficultyColor(diffTagEl, difficulty);
 
+      // Remove any tag wrappers whose inner value is empty
+      const hideIfEmpty = (innerEl) => {
+        if (!innerEl) return;
+        if (!innerEl.textContent || !innerEl.textContent.trim()) {
+          const tag = innerEl.closest('.tag');
+          if (tag) tag.remove();
+        }
+      };
+
+      hideIfEmpty(yearEl);
+      hideIfEmpty(categoryEl);
+      hideIfEmpty(diffEl);
+      hideIfEmpty(qtyDisplayEl);
+      hideIfEmpty(boardHouseEl);
+      hideIfEmpty(rarityEl);
+
       listContainer.appendChild(frag);
     });
   }
 
-  // ----- List.js + filtering/sorting -------------------------------------
+  // ----- List.js + filtering/sorting -----------------------------------
 
   function initList() {
-    return new List('items-list', { valueNames: VALUE_NAMES });
-  }
-
-  function applyAllFilters(itemList) {
-    const { category, year, difficulty, author } = getCurrentFacetValues();
-
-    itemList.filter(item => {
-      const v = item.values();
-      const catVal  = (v['item-category'] || '').trim();
-      const yearVal = (v['item-conferenceYear'] || '').trim();
-      const diffVal = (v['item-solderingDifficulty'] || '').trim();
-      const authVal = (v['item-author'] || '').trim();
-
-      if (category   && catVal  !== category)   return false;
-      if (year       && yearVal !== year)       return false;
-      if (difficulty && diffVal !== difficulty) return false;
-      if (author     && authVal !== author)     return false;
-
-      return itemMatchesSearch(v);
+    return new List('items-list', {
+      valueNames: VALUE_NAMES,
+      listClass: 'minibadge-list'
     });
   }
 
-  function refreshFacets(itemList) {
-    const facetValues = {
-      category:   new Set(),
-      year:       new Set(),
-      difficulty: new Set(),
-      author:     new Set()
-    };
+  function getCurrentFacetValues() {
+    const values = {};
+    FACETS.forEach(({ name, select }) => {
+      if (!select) return;
+      values[name] = select.value || '';
+    });
+    return values;
+  }
 
-    const current = getCurrentFacetValues();
+  function itemMatchesFacets(values) {
+    const { category, year, difficulty, author } = getCurrentFacetValues();
+
+    const catVal  = (values['item-category'] || '').trim();
+    const yearVal = (values['item-conferenceYear'] || '').trim();
+    const diffVal = (values['item-solderingDifficulty'] || '').trim();
+    const authVal = (values['item-author'] || '').trim();
+
+    if (category   && catVal  !== category)   return false;
+    if (year       && yearVal !== year)       return false;
+    if (difficulty && diffVal !== difficulty) return false;
+    if (author     && authVal !== author)     return false;
+
+    return true;
+  }
+
+  function itemMatchesSearch(values) {
+    const q = (currentSearchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    const haystack = [
+      'item-title',
+      'item-author',
+      'item-category',
+      'item-conferenceYear',
+      'item-solderingDifficulty',
+      'item-description',
+      'item-boardHouse',
+      'item-howToAcquire',
+      'item-rarity'
+    ]
+      .map(k => (values[k] || '').toString().toLowerCase())
+      .join(' ');
+
+    return haystack.includes(q);
+  }
+
+  function rebuildSelect(selectEl, defaultLabel, valuesSet) {
+    const previousValue = selectEl.value;
+    selectEl.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = defaultLabel;
+    selectEl.appendChild(defaultOption);
+
+    Array.from(valuesSet)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach(value => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        selectEl.appendChild(opt);
+      });
+
+    if (previousValue && valuesSet.has(previousValue)) {
+      selectEl.value = previousValue;
+    } else {
+      selectEl.value = '';
+    }
+  }
+
+  function buildFacetOptions(itemList) {
+    const valueSets = {
+      'item-category':            new Set(),
+      'item-conferenceYear':      new Set(),
+      'item-solderingDifficulty': new Set(),
+      'item-author':              new Set()
+    };
 
     itemList.items.forEach(item => {
       const v = item.values();
-      if (!itemMatchesSearch(v)) return;
 
-      FACETS.forEach(f => {
-        const val = (v[f.field] || '').trim();
-        if (!val) return;
+      if (v['item-category'])            valueSets['item-category'].add(v['item-category']);
+      if (v['item-conferenceYear'])      valueSets['item-conferenceYear'].add(v['item-conferenceYear']);
+      if (v['item-solderingDifficulty']) valueSets['item-solderingDifficulty'].add(v['item-solderingDifficulty']);
+      if (v['item-author'])              valueSets['item-author'].add(v['item-author']);
+    });
 
-        // Check all other facets' filters, but ignore this facet's own filter
-        const matchesOthers = FACETS.every(other => {
-          if (other.name === f.name) return true; // ignore itself
-          const filterVal = current[other.name];
-          if (!filterVal) return true;
-          const itemVal = (v[other.field] || '').trim();
-          return itemVal === filterVal;
-        });
+    FACETS.forEach(({ field, select, label }) => {
+      if (!select) return;
+      rebuildSelect(select, label, valueSets[field]);
+    });
+  }
 
-        if (matchesOthers) {
-          facetValues[f.name].add(val);
-        }
+  function applyFiltersAndSearch(itemList) {
+    itemList.filter(item => {
+      const v = item.values();
+
+      if (!itemMatchesFacets(v)) return false;
+      if (!itemMatchesSearch(v)) return false;
+
+      return true;
+    });
+
+    const visibleCount = itemList.visibleItems.length;
+
+    if (resultsCount) {
+      resultsCount.textContent = `Showing ${visibleCount} minibadge${visibleCount === 1 ? '' : 's'}`;
+    }
+
+    if (emptyMessage) {
+      emptyMessage.style.display = visibleCount === 0 ? '' : 'none';
+    }
+  }
+
+  function initFilters(itemList, totalCount) {
+    FACETS.forEach(({ select }) => {
+      if (!select) return;
+      select.addEventListener('change', () => {
+        applyFiltersAndSearch(itemList);
       });
     });
 
-    FACETS.forEach(f => {
-      rebuildSelect(f.select, f.label, facetValues[f.name]);
-    });
-  }
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        currentSearchQuery = searchInput.value || '';
+        applyFiltersAndSearch(itemList);
+      });
+    }
 
-  function updateResultsCount(itemList, totalCount) {
-    if (!resultsCount) return;
-    const current = itemList.matchingItems.length;
-    resultsCount.textContent = (current === totalCount)
-      ? `Showing ${current} minibadges`
-      : `Showing ${current} of ${totalCount} minibadges`;
+    if (clearFiltersButton) {
+      clearFiltersButton.addEventListener('click', () => {
+        FACETS.forEach(({ select }) => {
+          if (select) select.value = '';
+        });
+        if (searchInput) {
+          searchInput.value = '';
+          currentSearchQuery = '';
+        }
+        applyFiltersAndSearch(itemList);
+      });
+    }
+
+    if (resultsCount) {
+      resultsCount.textContent = `Showing ${totalCount} minibadge${totalCount === 1 ? '' : 's'}`;
+    }
   }
 
   function initSorting(itemList) {
-    sortSelect.addEventListener('change', () => {
-      const raw = sortSelect.value; // e.g. "item-title:asc" or "item-quantityMade:num-asc"
-      const [field, spec] = raw.split(':');
-      const [mode, orderRaw] = (spec || '').split('-');
-      const order = orderRaw || spec || 'asc';
+    if (!sortSelect) return;
 
-      if (field === 'item-quantityMade' && mode === 'num') {
-        itemList.sort(field, {
-          sortFunction: (a, b) => {
-            const toNum = (v) => parseInt((v || '0').replace(/\D/g, ''), 10) || 0;
-            const av = toNum(a.values()[field]);
-            const bv = toNum(b.values()[field]);
-            return order === 'asc' ? av - bv : bv - av;
-          }
-        });
-      } else {
-        itemList.sort(field, { order });
+    sortSelect.addEventListener('change', () => {
+      const val = sortSelect.value;
+
+      switch (val) {
+        case 'title-asc':
+          itemList.sort('item-title', { order: 'asc' });
+          break;
+        case 'title-desc':
+          itemList.sort('item-title', { order: 'desc' });
+          break;
+        case 'year-desc':
+          itemList.sort('item-conferenceYear', { order: 'desc' });
+          break;
+        case 'year-asc':
+          itemList.sort('item-conferenceYear', { order: 'asc' });
+          break;
+        case 'quantity-desc':
+          itemList.sort('item-quantityMade', {
+            order: 'desc',
+            sortFunction: (a, b) => {
+              const av = parseInt(a.values()['item-quantityMade'] || '0', 10);
+              const bv = parseInt(b.values()['item-quantityMade'] || '0', 10);
+              return av - bv;
+            }
+          });
+          break;
+        case 'quantity-asc':
+          itemList.sort('item-quantityMade', {
+            order: 'asc',
+            sortFunction: (a, b) => {
+              const av = parseInt(a.values()['item-quantityMade'] || '0', 10);
+              const bv = parseInt(b.values()['item-quantityMade'] || '0', 10);
+              return av - bv;
+            }
+          });
+          break;
+        default:
+          break;
       }
     });
   }
 
-  function initFilters(itemList, totalCount) {
-    // Live search
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        currentSearchQuery = e.target.value || '';
-        applyAllFilters(itemList);
-      });
-    }
+  // ----- Bootstrapping: load data, render, init List.js ------------------
 
-    // Dropdown filters
-    [categoryFilter, yearFilter, difficultyFilter, authorFilter].forEach(sel => {
-      sel.addEventListener('change', () => applyAllFilters(itemList));
+  fetchAllData(DATA_FILES)
+    .then(data => {
+      allData = data;
+      if (!Array.isArray(allData) || allData.length === 0) {
+        throw new Error('No minibadge data loaded');
+      }
+
+      renderCards(allData);
+
+      itemList = initList();
+      const totalCount = itemList.items.length;
+
+      buildFacetOptions(itemList);
+      initSorting(itemList);
+      initFilters(itemList, totalCount);
+      applyFiltersAndSearch(itemList);
+    })
+    .catch(err => {
+      console.error(err);
+      if (emptyMessage) {
+        emptyMessage.style.display = '';
+        emptyMessage.textContent = 'Failed to load minibadge data.';
+      }
+      if (resultsCount) {
+        resultsCount.textContent = 'Showing 0 minibadges';
+      }
     });
-
-    // Clear filters
-    if (clearFiltersButton) {
-      clearFiltersButton.addEventListener('click', () => {
-        if (searchInput) searchInput.value = '';
-        currentSearchQuery = '';
-        categoryFilter.value   = '';
-        yearFilter.value       = '';
-        difficultyFilter.value = '';
-        authorFilter.value     = '';
-        applyAllFilters(itemList);
-      });
-    }
-
-    // React to List.js updates
-    itemList.on('updated', (list) => {
-      refreshFacets(list);
-      updateResultsCount(list, totalCount);
-      emptyMessage.style.display = list.matchingItems.length ? 'none' : '';
-    });
-
-    // Initial state
-    refreshFacets(itemList);
-    itemList.sort('item-timestamp', { order: 'desc' });
-    updateResultsCount(itemList, totalCount);
-  }
-
-// ----- Bootstrapping: load data from multiple files, render, init List.js -----
-
-// Array of JSON files to load (add/remove as needed)
-const DATA_FILES = [
-  '2025.json',
-   '2024.json',
-  '2023.json',
-];
-
-Promise.all(
-  DATA_FILES.map(path =>
-    fetch(path)
-      .then(r => {
-        if (!r.ok) {
-          throw new Error(`Failed to load ${path}`);
-        }
-        return r.json();
-      })
-      .catch(err => {
-        // Log but don't kill the whole app if one file fails
-        console.error(err);
-        return []; // treat this file as empty
-      })
-  )
-)
-  .then(datasets => {
-    // datasets: [arrayFromFile1, arrayFromFile2, ...]
-    const data = datasets.flat();
-
-    if (!data.length) {
-      // No data at all (all files failed or were empty)
-      emptyMessage.style.display = '';
-      emptyMessage.textContent = 'Failed to load minibadge data.';
-      if (resultsCount) resultsCount.textContent = 'Showing 0 minibadges';
-      return;
-    }
-
-    renderCards(data);
-
-    const itemList   = initList();
-    const totalCount = itemList.items.length;
-
-    initSorting(itemList);
-    initFilters(itemList, totalCount);
-  })
-  .catch(err => {
-    // This only triggers if something outside the per-file catch blows up
-    console.error(err);
-    emptyMessage.style.display = '';
-    emptyMessage.textContent = 'Failed to load minibadge data.';
-    if (resultsCount) resultsCount.textContent = 'Showing 0 minibadges';
-  });
 });
