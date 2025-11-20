@@ -11,7 +11,7 @@ on:
 
   # Scheduled run (UTC time). Example: every day at 08:00 UTC
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write  # needed so we can push changes
