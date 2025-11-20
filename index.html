@@ -98,7 +98,7 @@
             </div>
           </div>
 
-          <!-- Sort control + clear filters + results count -->
+          <!-- Sort control -->
           <div class="column is-6-tablet is-3-desktop">
             <div class="field">
               <label class="label">Sort by</label>
@@ -117,22 +117,27 @@
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Clear filters button + results count, right-aligned -->
-            <div class="field is-grouped is-justify-content-flex-end mt-2">
-              <div class="control">
-                <button
-                  class="button is-light is-small"
-                  id="clearFiltersButton"
-                  type="button"
-                >
-                  Clear filters
-                </button>
-              </div>
-              <div class="control">
-                <p id="resultsCount" class="help has-text-right">
-                  <!-- Filled by JS -->
-                </p>
+          <!-- Clear filters + results count (own column, inline with others) -->
+          <div class="column is-6-tablet is-3-desktop">
+            <div class="field">
+              <label class="label">Filters</label>
+              <div class="field is-grouped is-justify-content-space-between is-align-items-center">
+                <div class="control">
+                  <button
+                    class="button is-light is-small"
+                    id="clearFiltersButton"
+                    type="button"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+                <div class="control is-flex-grow-1 has-text-right">
+                  <p id="resultsCount" class="help">
+                    <!-- Filled by JS -->
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -140,27 +145,4 @@
         </div>
       </div>
 
-      <!-- Badge list container for List.js -->
-      <div id="items-list">
-        <div class="minibadge-list list">
-          <!-- Cards will be injected here from minibadges.json -->
-        </div>
-
-        <!-- Shown when filters/search hide everything -->
-        <p
-          id="emptyMessage"
-          class="has-text-centered is-italic mt-4"
-          style="display:none;"
-        >
-          No minibadges match your filters yet.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- List.js -->
-  <script src="https://cdn.jsdelivr.net/npm/list.js@2.3.1/dist/list.min.js"></script>
-  <!-- Your custom logic -->
-  <script src="code.js"></script>
-</body>
-</html>
+      <!-- Badge l
