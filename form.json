@@ -70,5 +70,23 @@
     "howToAcquire": "Purchase from my Tindie Store",
     "rarity": "",
     "timestamp": "11/20/2025 13:01:02"
+  },
+  {
+    "title": "ESP32 Meshtastic Minibadge",
+    "author": "Pips",
+    "profilePictureUrl": "images/esp32-meshtastic-minibadge-profile.jpg",
+    "frontImageUrl": "images/esp32-meshtastic-minibadge-front.webp",
+    "backImageUrl": "images/esp32-meshtastic-minibadge-back.webp",
+    "description": "A minibadge that will hold a XIAO ESP32 - specifically made for the WIO Meshtastic module.",
+    "specialInstructions": "Comes pre-flashed with meshtastic firmware. Can be easily updated to the latest firmware through the meshtastic flasher website.",
+    "solderingInstructions": "Solder on ESP module.\nSolder 5V jumper (do not solder 3v)\nsolder on diodes\nsolder pin headers",
+    "solderingDifficulty": "Beginner",
+    "quantityMade": 3,
+    "category": "Personal",
+    "conferenceYear": "2026",
+    "boardHouse": "OSHPark",
+    "howToAcquire": "Secret prototype minibadges",
+    "rarity": "",
+    "timestamp": "11/20/2025 14:37:05"
   }
 ]
