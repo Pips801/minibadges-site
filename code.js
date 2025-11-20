@@ -324,25 +324,56 @@ document.addEventListener('DOMContentLoaded', () => {
     updateResultsCount(itemList, totalCount);
   }
 
-  // ----- Bootstrapping: load data, render, init List.js ------------------
+// ----- Bootstrapping: load data from multiple files, render, init List.js -----
 
-  fetch('2025.json')
-    .then(r => {
-      if (!r.ok) throw new Error('Failed to load minibadges.json');
-      return r.json();
-    })
-    .then(data => {
-      renderCards(data);
-      const itemList   = initList();
-      const totalCount = itemList.items.length;
+// Array of JSON files to load (add/remove as needed)
+const DATA_FILES = [
+  '2025.json',
+   '2024.json',
+  // 'sponsors.json',
+];
 
-      initSorting(itemList);
-      initFilters(itemList, totalCount);
-    })
-    .catch(err => {
-      console.error(err);
+Promise.all(
+  DATA_FILES.map(path =>
+    fetch(path)
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`Failed to load ${path}`);
+        }
+        return r.json();
+      })
+      .catch(err => {
+        // Log but don't kill the whole app if one file fails
+        console.error(err);
+        return []; // treat this file as empty
+      })
+  )
+)
+  .then(datasets => {
+    // datasets: [arrayFromFile1, arrayFromFile2, ...]
+    const data = datasets.flat();
+
+    if (!data.length) {
+      // No data at all (all files failed or were empty)
       emptyMessage.style.display = '';
       emptyMessage.textContent = 'Failed to load minibadge data.';
       if (resultsCount) resultsCount.textContent = 'Showing 0 minibadges';
-    });
+      return;
+    }
+
+    renderCards(data);
+
+    const itemList   = initList();
+    const totalCount = itemList.items.length;
+
+    initSorting(itemList);
+    initFilters(itemList, totalCount);
+  })
+  .catch(err => {
+    // This only triggers if something outside the per-file catch blows up
+    console.error(err);
+    emptyMessage.style.display = '';
+    emptyMessage.textContent = 'Failed to load minibadge data.';
+    if (resultsCount) resultsCount.textContent = 'Showing 0 minibadges';
+  });
 });
