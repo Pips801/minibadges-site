@@ -85,13 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
             diffTagEl.classList.add('is-success');
           } else if (d === 'beginner') {
             // light green
-            diffTagEl.classList.add('is-success', 'is-light');
+            diffTagEl.classList.add('is-success');
           } else if (d === 'intermediate') {
             // yellow / warning
             diffTagEl.classList.add('is-warning');
           } else if (d === 'advanced') {
             // orange-ish / softer red
-            diffTagEl.classList.add('is-danger', 'is-light');
+            diffTagEl.classList.add('is-danger');
           } else if (d === 'torture') {
             // hardest → strong red
             diffTagEl.classList.add('is-danger');
