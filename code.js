@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let allData  = [];
   let currentSearchQuery = '';
 
+  // ---------- Fetch helpers ----------------------------------------------
+
   function fetchAllData(files) {
     return Promise.all(
       files.map(path =>
@@ -64,13 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
     ).then(datasets => datasets.flat());
   }
 
+  // ---------- Difficulty coloring -----------------------------------------
+
   function applyDifficultyColor(tagEl, difficulty) {
     if (!tagEl) return;
 
     tagEl.classList.remove(
       'is-primary',
       'is-link',
-      'is-light'
+      'is-light',
+      'is-info',
+      'is-success',
+      'is-warning',
+      'is-danger'
     );
 
     const d = (difficulty || '').trim().toLowerCase();
@@ -156,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       applyDifficultyColor(diffTagEl, difficulty);
 
       // Remove any tag wrappers whose inner value is empty
-      const hideIfEmpty = (innerEl) => {
+      const hideTagIfEmpty = (innerEl) => {
         if (!innerEl) return;
         if (!innerEl.textContent || !innerEl.textContent.trim()) {
           const tag = innerEl.closest('.tag');
@@ -164,12 +172,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       };
 
-      hideIfEmpty(yearEl);
-      hideIfEmpty(categoryEl);
-      hideIfEmpty(diffEl);
-      hideIfEmpty(qtyDisplayEl);
-      hideIfEmpty(boardHouseEl);
-      hideIfEmpty(rarityEl);
+      hideTagIfEmpty(yearEl);
+      hideTagIfEmpty(categoryEl);
+      hideTagIfEmpty(diffEl);
+      hideTagIfEmpty(qtyDisplayEl);
+      hideTagIfEmpty(boardHouseEl);
+      hideTagIfEmpty(rarityEl);
+
+      // NEW: remove the details boxes if their content is empty
+      const hideBoxIfEmpty = (contentEl) => {
+        if (!contentEl) return;
+        if (!contentEl.textContent || !contentEl.textContent.trim()) {
+          const box = contentEl.closest('.mb-2'); // wrapper div around <details>
+          if (box) box.remove();
+        }
+      };
+
+      hideBoxIfEmpty(specialEl);   // "Special instructions" box
+      hideBoxIfEmpty(solderingEl); // "Assembly & soldering instructions" box
+      hideBoxIfEmpty(howEl);       // "How do people get one?" box
 
       listContainer.appendChild(frag);
     });
