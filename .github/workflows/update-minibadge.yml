@@ -3,7 +3,7 @@ name: Update minibadges JSON
 on:
   # Manual button in the Actions tab
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 
